@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Interstellar: Las 4 Dimensiones</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Courier New', Courier, monospace; }
+        #overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00f2ff; text-align: center; text-shadow: 0 0 10px #00f2ff;
+            pointer-events: none; width: 80%; z-index: 10;
+        }
+        .dim-text { opacity: 0; transition: opacity 2s; font-size: 1.5rem; margin: 20px; }
+        #instruccion {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: white; font-size: 0.9rem; letter-spacing: 2px;
+            animation: blink 2s infinite; cursor: pointer; z-index: 20;
+        }
+        @keyframes blink { 0% {opacity: 0.2;} 50% {opacity: 1;} 100% {opacity: 0.2;} }
+    </style>
+</head>
+<body>
+
+    <audio id="miMusica" loop>
+        <source src="musica.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="instruccion">HAZ CLIC PARA INICIAR LA TRANSMISIÓN</div>
+
+    <div id="overlay">
+        <h2 id="status">CONECTANDO...</h2>
+        <div id="frase" class="dim-text"></div>
+    </div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Estrellas
+        const starGeo = new THREE.BufferGeometry();
+        const starCoords = [];
+        for (let i = 0; i < 10000; i++) {
+            starCoords.push(THREE.MathUtils.randFloatSpread(1500), THREE.MathUtils.randFloatSpread(1500), THREE.MathUtils.randFloatSpread(1500));
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
+        scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.7 })));
+
+        // Teseracto
+        const cube = new THREE.LineSegments(
+            new THREE.EdgesGeometry(new THREE.BoxGeometry(4, 4, 4)),
+            new THREE.LineBasicMaterial({ color: 0x00f2ff })
+        );
+        scene.add(cube);
+        camera.position.z = 25;
+
+        const frases = [
+            "El amor no es algo que hayamos inventado. Es observable, es potente.",
+            "Debe significar algo. Tal vez es una prueba de una realidad superior.",
+            "El amor es la única cosa que trasciende el tiempo y el espacio.",
+            "Tal vez deberíamos confiar en esto, aunque no lo entendamos.",
+            "Algunas cosas no se entienden... pero se sienten."
+        ];
+
+        let etapa = 0;
+        const textoDiv = document.getElementById('frase');
+        const statusH2 = document.getElementById('status');
+        const musica = document.getElementById('miMusica');
+
+        function mostrarSiguiente() {
+            if (etapa < frases.length) {
+                textoDiv.style.opacity = 0;
+                setTimeout(() => {
+                    statusH2.innerText = `DIMENSIÓN ${etapa + 1} ACTIVA`;
+                    textoDiv.innerText = frases[etapa];
+                    textoDiv.style.opacity = 1;
+                    etapa++;
+                }, 1500);
+            }
+        }
+
+        window.addEventListener('click', () => {
+            musica.play();
+            document.getElementById('instruccion').style.display = 'none';
+            setInterval(mostrarSiguiente, 8000);
+            mostrarSiguiente();
+        }, { once: true });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (camera.position.z > 6) camera.position.z -= 0.02;
+            cube.rotation.x += 0.004;
+            cube.rotation.y += 0.004;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
